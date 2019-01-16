@@ -1,7 +1,7 @@
 from math import ceil
 
 from django.shortcuts import render, redirect
-
+import markdown
 from common import rds
 from common import keys
 from post.models import Post, Comment, Tag
@@ -30,6 +30,8 @@ def create(request):
         uid = request.session['uid']
         title = request.POST.get('title')
         content = request.POST.get('content')
+        content = markdown.markdown(content, extensions=[
+                                    'markdown.extensions.extra', 'markdown.extensions.codehilite', 'markdown.extensions.tables'])
         post = Post.objects.create(uid=uid, title=title, content=content)
         return redirect('/post/read/?post_id=%s' % post.id)
 
@@ -56,7 +58,8 @@ def edit(request):
         post = Post.objects.get(id=post_id)
 
         post.title = request.POST.get('title', '')
-        post.content = request.POST.get('content', '')
+        post.content = markdown.markdown(request.POST.get('content', ''), extensions=[
+            'markdown.extensions.extra', 'markdown.extensions.codehilite', 'markdown.extensions.tables'])
         post.save()
 
         # 处理 Tags
